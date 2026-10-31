@@ -10,33 +10,85 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
+import { Route as AuthRouteImport } from './routes/auth'
+import { Route as SoloRouteImport } from './routes/solo'
+import { Route as AuthenticatedPlayRouteImport } from './routes/_authenticated/play'
+import { Route as AuthenticatedMatchIdRouteImport } from './routes/_authenticated/match.$id'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
+  id: '/_authenticated',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthRoute = AuthRouteImport.update({
+  id: '/auth',
+  path: '/auth',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const SoloRoute = SoloRouteImport.update({
+  id: '/solo',
+  path: '/solo',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedPlayRoute = AuthenticatedPlayRouteImport.update({
+  id: '/play',
+  path: '/play',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
+const AuthenticatedMatchIdRoute = AuthenticatedMatchIdRouteImport.update({
+  id: '/match/$id',
+  path: '/match/$id',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/solo': typeof SoloRoute
+  '/play': typeof AuthenticatedPlayRoute
+  '/match/$id': typeof AuthenticatedMatchIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
+  '/auth': typeof AuthRoute
+  '/solo': typeof SoloRoute
+  '/play': typeof AuthenticatedPlayRoute
+  '/match/$id': typeof AuthenticatedMatchIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
+  '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
+  '/auth': typeof AuthRoute
+  '/solo': typeof SoloRoute
+  '/_authenticated/play': typeof AuthenticatedPlayRoute
+  '/_authenticated/match/$id': typeof AuthenticatedMatchIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/'
+  fullPaths: '/' | '/auth' | '/solo' | '/play' | '/match/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/'
-  id: '__root__' | '/'
+  to: '/' | '/auth' | '/solo' | '/play' | '/match/$id'
+  id:
+    | '__root__'
+    | '/'
+    | '/_authenticated'
+    | '/auth'
+    | '/solo'
+    | '/_authenticated/play'
+    | '/_authenticated/match/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
+  AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
+  AuthRoute: typeof AuthRoute
+  SoloRoute: typeof SoloRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -48,11 +100,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated': {
+      id: '/_authenticated'
+      path: ''
+      fullPath: '/'
+      preLoaderRoute: typeof AuthenticatedRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/auth': {
+      id: '/auth'
+      path: '/auth'
+      fullPath: '/auth'
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/solo': {
+      id: '/solo'
+      path: '/solo'
+      fullPath: '/solo'
+      preLoaderRoute: typeof SoloRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/play': {
+      id: '/_authenticated/play'
+      path: '/play'
+      fullPath: '/play'
+      preLoaderRoute: typeof AuthenticatedPlayRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
+    '/_authenticated/match/$id': {
+      id: '/_authenticated/match/$id'
+      path: '/match/$id'
+      fullPath: '/match/$id'
+      preLoaderRoute: typeof AuthenticatedMatchIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
+interface AuthenticatedRouteRouteChildren {
+  AuthenticatedPlayRoute: typeof AuthenticatedPlayRoute
+  AuthenticatedMatchIdRoute: typeof AuthenticatedMatchIdRoute
+}
+
+const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedPlayRoute: AuthenticatedPlayRoute,
+  AuthenticatedMatchIdRoute: AuthenticatedMatchIdRoute,
+}
+
+const AuthenticatedRouteRouteWithChildren =
+  AuthenticatedRouteRoute._addFileChildren(AuthenticatedRouteRouteChildren)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
+  AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
+  AuthRoute: AuthRoute,
+  SoloRoute: SoloRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
