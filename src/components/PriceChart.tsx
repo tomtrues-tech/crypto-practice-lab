@@ -19,11 +19,11 @@ function simulate(base: number, n: number, span: number): Pt[] {
   const now = Date.now();
   let p = base;
   const out: Pt[] = [];
-  for (let i = n; i >= 0; i--) {
-    out.unshift({ t: now - (span / n) * (n - i), p });
+  for (let i = 0; i <= n; i++) {
+    out.unshift({ t: now - (span / n) * i, p });
     p = p * (1 + (Math.random() - 0.5) * 0.02);
   }
-  return out.reverse().map((x, i, a) => ({ t: a[a.length - 1 - i]!.t, p: x.p })).sort((a, b) => a.t - b.t);
+  return out;
 }
 
 export function PriceChart({ id, name, symbol, price }: { id: string; name: string; symbol: string; price: number }) {
