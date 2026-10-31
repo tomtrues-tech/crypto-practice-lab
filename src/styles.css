@@ -5,42 +5,86 @@
 @theme inline {
   --font-sans: "Space Grotesk", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
-  --radius-lg: var(--radius);
+  --font-display: "Bricolage Grotesque", "Space Grotesk", sans-serif;
+  --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
+  --color-card-foreground: var(--foreground);
+  --color-popover: var(--card);
+  --color-popover-foreground: var(--foreground);
   --color-primary: var(--primary);
   --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--muted);
+  --color-secondary-foreground: var(--foreground);
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--primary-foreground);
+  --color-destructive: var(--loss);
   --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--primary);
   --color-gain: var(--gain);
   --color-loss: var(--loss);
-  --color-input: var(--input);
+  --color-pump: var(--pump);
 }
 
 :root {
   --radius: 0.75rem;
-  --background: oklch(0.16 0.02 250);
-  --foreground: oklch(0.96 0.01 160);
-  --card: oklch(0.21 0.025 250);
-  --primary: oklch(0.85 0.18 165);
-  --primary-foreground: oklch(0.18 0.03 250);
-  --muted: oklch(0.26 0.025 250);
-  --muted-foreground: oklch(0.68 0.03 250);
-  --border: oklch(0.3 0.03 250);
-  --input: oklch(0.26 0.025 250);
-  --gain: oklch(0.82 0.18 160);
-  --loss: oklch(0.68 0.2 22);
+  --background: oklch(0.14 0.02 260);
+  --foreground: oklch(0.96 0.01 150);
+  --card: oklch(0.19 0.025 260);
+  --primary: oklch(0.88 0.2 145);
+  --primary-foreground: oklch(0.16 0.03 260);
+  --accent: oklch(0.72 0.22 350);
+  --muted: oklch(0.24 0.025 260);
+  --muted-foreground: oklch(0.66 0.03 260);
+  --border: oklch(0.29 0.03 260);
+  --input: oklch(0.23 0.025 260);
+  --gain: oklch(0.84 0.2 150);
+  --loss: oklch(0.68 0.21 22);
+  --pump: oklch(0.72 0.22 350);
 }
 
 @layer base {
   * { border-color: var(--color-border); }
   body {
-    background: radial-gradient(ellipse at top, oklch(0.24 0.06 190 / 0.5), transparent 60%), var(--color-background);
+    background:
+      radial-gradient(ellipse 60% 40% at 10% 0%, oklch(0.4 0.15 145 / 0.25), transparent),
+      radial-gradient(ellipse 50% 40% at 100% 0%, oklch(0.45 0.2 350 / 0.18), transparent),
+      var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     min-height: 100vh;
   }
 }
+
+@utility font-display { font-family: var(--font-display); font-weight: 800; letter-spacing: -0.02em; }
+@utility panel { border-radius: var(--radius); border: 1px solid var(--color-border); background: var(--color-card); }
+@utility btn-primary {
+  border-radius: calc(var(--radius) - 2px); background: var(--color-primary); color: var(--color-primary-foreground);
+  padding: 0.75rem 1.25rem; font-weight: 700; transition: transform .15s, box-shadow .15s;
+  box-shadow: 0 0 0 0 transparent;
+  &:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 8px 30px -8px var(--color-primary); }
+  &:disabled { opacity: .5; cursor: not-allowed; }
+}
+@utility btn-ghost {
+  border-radius: calc(var(--radius) - 2px); border: 1px solid var(--color-border); padding: 0.75rem 1.25rem; font-weight: 600;
+  &:hover { background: var(--color-muted); }
+}
+@utility btn-close {
+  border-radius: calc(var(--radius) - 4px); border: 1px solid var(--color-loss); color: var(--color-loss);
+  padding: 0.25rem 0.75rem; font-family: var(--font-sans); font-size: 0.75rem; font-weight: 700;
+  &:hover:not(:disabled) { background: var(--color-loss); color: var(--color-primary-foreground); }
+  &:disabled { opacity: .5; }
+}
+@utility tag {
+  border-radius: 999px; padding: 0 0.4rem; font-size: 0.6rem; font-weight: 700; text-transform: uppercase;
+  background: var(--color-muted); color: var(--color-muted-foreground);
+}
+@utility tag-pump { background: color-mix(in oklab, var(--pump) 20%, transparent); color: var(--pump); }
+@utility tag-hot { background: color-mix(in oklab, var(--primary) 18%, transparent); color: var(--primary); }
