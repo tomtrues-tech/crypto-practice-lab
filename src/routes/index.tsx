@@ -75,9 +75,9 @@ function Index() {
         setLive(false);
         setCoins((prev) => IDS.map((id) => {
           const p = prev.find((c) => c.id === id);
-          const base = p?.price ?? FALLBACK[id][2];
+          const base = p?.price ?? FALLBACK[id]![2];
           const price = base * (1 + (Math.random() - 0.5) * 0.01);
-          return { id, symbol: FALLBACK[id][0], name: FALLBACK[id][1], price, change: p ? ((price / FALLBACK[id][2]) - 1) * 100 : 0, spark: [...(p?.spark ?? []), price].slice(-40) };
+          return { id, symbol: FALLBACK[id]![0], name: FALLBACK[id]![1], price, change: p ? ((price / FALLBACK[id]![2]) - 1) * 100 : 0, spark: [...(p?.spark ?? []), price].slice(-40) };
         }));
       }
     };
