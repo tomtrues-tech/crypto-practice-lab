@@ -1,5 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useMemo, useState } from "react";
+import { PriceChart } from "@/components/PriceChart";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -114,6 +115,18 @@ function Index() {
     setMsg(`${side === "BUY" ? "Bought" : "Sold"} ${qty.toFixed(6)} ${coin.symbol} at ${usd(coin.price)}`);
   };
 
+  const closePos = (id: string) => {
+    const h = st.holdings[id];
+    const p = priceOf(id);
+    if (!h || !p) return;
+    const value = h.qty * p;
+    const holdings = { ...st.holdings };
+    delete holdings[id];
+    setSt({ cash: st.cash + value, holdings, trades: [{ t: Date.now(), id, side: "SELL" as const, qty: h.qty, price: p }, ...st.trades].slice(0, 50) });
+    const pl = value - h.cost;
+    setMsg(`Closed ${FALLBACK[id]?.[0]} for ${pl >= 0 ? "+" : ""}${usd(pl)}`);
+  };
+
   const card = "rounded-lg border bg-card p-5";
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
@@ -139,6 +152,33 @@ function Index() {
       </section>
 
       <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        <div className="space-y-6 min-w-0">
+        {coin && <PriceChart key={coin.id} id={coin.id} name={coin.name} symbol={coin.symbol} price={coin.price} />}
+        <section className={card}>
+          <h3 className="mb-3 font-semibold">Open positions</h3>
+          {Object.keys(st.holdings).length === 0 ? <p className="text-sm text-muted-foreground">No open positions. Buy a coin to open one.</p> : (
+            <table className="w-full text-sm">
+              <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
+                <tr><th className="pb-2">Coin</th><th>Qty</th><th>Avg entry</th><th>Value</th><th>P/L</th><th></th></tr>
+              </thead>
+              <tbody>
+                {Object.entries(st.holdings).map(([id, h]) => {
+                  const p = priceOf(id); const v = h.qty * p; const pl = v - h.cost; const pct = (pl / h.cost) * 100;
+                  return (
+                    <tr key={id} className="border-t font-mono">
+                      <td className="py-3 font-sans font-semibold"><button onClick={() => setSel(id)}>{FALLBACK[id]?.[0]}</button></td>
+                      <td>{h.qty.toFixed(5)}</td>
+                      <td>{usd(h.cost / h.qty)}</td>
+                      <td>{usd(v)}</td>
+                      <td className={pl >= 0 ? "text-gain" : "text-loss"}>{pl >= 0 ? "+" : ""}{usd(pl)} ({pct.toFixed(2)}%)</td>
+                      <td className="text-right"><button onClick={() => closePos(id)} className="rounded-md border border-loss px-3 py-1 font-sans text-xs font-semibold text-loss hover:bg-loss hover:text-primary-foreground">Close</button></td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </section>
         <section className={`${card} p-0 overflow-hidden`}>
           <table className="w-full text-sm">
             <thead className="text-left text-xs uppercase tracking-wider text-muted-foreground">
@@ -158,6 +198,7 @@ function Index() {
             </tbody>
           </table>
         </section>
+        </div>
 
         <aside className="space-y-6">
           <div className={card}>
