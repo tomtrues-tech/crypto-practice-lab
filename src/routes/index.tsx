@@ -152,7 +152,7 @@ function Index() {
                   <td className="font-mono">{usd(c.price)}</td>
                   <td className={`font-mono ${c.change >= 0 ? "text-gain" : "text-loss"}`}>{c.change >= 0 ? "+" : ""}{c.change.toFixed(2)}%</td>
                   <td className="hidden sm:table-cell"><Spark data={c.spark} up={c.change >= 0} /></td>
-                  <td className="pr-4 text-right font-mono text-muted-foreground">{st.holdings[c.id] ? usd(st.holdings[c.id].qty * c.price) : "—"}</td>
+                  <td className="pr-4 text-right font-mono text-muted-foreground">{st.holdings[c.id] ? usd(st.holdings[c.id]!.qty * c.price) : "—"}</td>
                 </tr>
               ))}
             </tbody>
