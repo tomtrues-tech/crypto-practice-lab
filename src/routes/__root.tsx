@@ -4,11 +4,14 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useNavigate,
   HeadContent,
   Scripts,
   type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useSession } from "@/hooks/use-session";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -78,13 +81,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "PaperPit" },
-      { name: "description", content: "Practice crypto trading with virtual money." },
+      { title: "MemeDuel" },
+      { name: "description", content: "Paper trade real memecoins and duel other traders." },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600;700&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,800&display=swap" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
@@ -108,12 +111,48 @@ function RootShell({ children }: { children: ReactNode }) {
   );
 }
 
+function Header() {
+  const { user } = useSession();
+  const navigate = useNavigate();
+  const qc = Route.useRouteContext().queryClient;
+  const link = "rounded-md px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground";
+  const active = { className: "rounded-md px-3 py-2 text-sm font-semibold text-foreground bg-muted" };
+  return (
+    <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
+      <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3">
+        <Link to="/" className="mr-4 font-display text-2xl">Meme<span className="text-primary">Duel</span></Link>
+        <Link to="/solo" className={link} activeProps={active}>Solo</Link>
+        <Link to="/play" className={link} activeProps={active}>1v1 Arena</Link>
+        <div className="ml-auto">
+          {user ? (
+            <button className={link} onClick={async () => { await qc.cancelQueries(); qc.clear(); await supabase.auth.signOut(); navigate({ to: "/auth", search: { redirect: undefined }, replace: true }); }}>Sign out</button>
+          ) : (
+            <Link to="/auth" search={{ redirect: undefined }} className="btn-primary !py-2 text-sm">Sign in</Link>
+          )}
+        </div>
+      </div>
+    </header>
+  );
+}
+
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const router = useRouter();
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((event) => {
+      if (event !== "SIGNED_IN" && event !== "SIGNED_OUT" && event !== "USER_UPDATED") return;
+      router.invalidate();
+      if (event === "SIGNED_IN") {
+        const dest = sessionStorage.getItem("postAuth");
+        if (dest) { sessionStorage.removeItem("postAuth"); router.navigate({ to: dest }); }
+      }
+    });
+    return () => data.subscription.unsubscribe();
+  }, [router]);
 
   return (
     <QueryClientProvider client={queryClient}>
-      {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
+      <Header />
       <Outlet />
     </QueryClientProvider>
   );
