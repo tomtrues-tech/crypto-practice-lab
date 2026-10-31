@@ -14,13 +14,158 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      match_players: {
+        Row: {
+          cash: number
+          final_value: number | null
+          holdings: Json
+          joined_at: string
+          match_id: string
+          user_id: string
+          username: string
+        }
+        Insert: {
+          cash: number
+          final_value?: number | null
+          holdings?: Json
+          joined_at?: string
+          match_id: string
+          user_id: string
+          username: string
+        }
+        Update: {
+          cash?: number
+          final_value?: number | null
+          holdings?: Json
+          joined_at?: string
+          match_id?: string
+          user_id?: string
+          username?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_players_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      match_trades: {
+        Row: {
+          created_at: string
+          id: string
+          match_id: string
+          price: number
+          qty: number
+          side: string
+          symbol: string
+          token: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          match_id: string
+          price: number
+          qty: number
+          side: string
+          symbol: string
+          token: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          match_id?: string
+          price?: number
+          qty?: number
+          side?: string
+          symbol?: string
+          token?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "match_trades_match_id_fkey"
+            columns: ["match_id"]
+            isOneToOne: false
+            referencedRelation: "matches"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      matches: {
+        Row: {
+          code: string
+          created_at: string
+          duration_minutes: number
+          ends_at: string | null
+          host_id: string
+          id: string
+          is_public: boolean
+          started_at: string | null
+          starting_cash: number
+          status: string
+          winner_id: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          duration_minutes?: number
+          ends_at?: string | null
+          host_id: string
+          id?: string
+          is_public?: boolean
+          started_at?: string | null
+          starting_cash?: number
+          status?: string
+          winner_id?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          duration_minutes?: number
+          ends_at?: string | null
+          host_id?: string
+          id?: string
+          is_public?: boolean
+          started_at?: string | null
+          starting_cash?: number
+          status?: string
+          winner_id?: string | null
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          id: string
+          username: string
+        }
+        Insert: {
+          created_at?: string
+          id: string
+          username: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          username?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      is_match_member: {
+        Args: { _match: string; _user: string }
+        Returns: boolean
+      }
+      is_match_public: { Args: { _match: string }; Returns: boolean }
     }
     Enums: {
       [_ in never]: never
