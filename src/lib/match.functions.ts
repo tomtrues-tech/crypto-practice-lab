@@ -84,7 +84,7 @@ export const placeTrade = createServerFn({ method: "POST" })
   .handler(async ({ data, context }) => {
     const db = await admin();
     const { data: match } = await db.from("matches").select("*").eq("id", data.matchId).maybeSingle();
-    if (!match || match.status !== "active" || new Date(match.ends_at).getTime() < Date.now()) throw new Error("Match is not live");
+    if (!match || match.status !== "active" || new Date(match.ends_at ?? 0).getTime() < Date.now()) throw new Error("Match is not live");
     const { data: me } = await db.from("match_players").select("*").eq("match_id", match.id).eq("user_id", context.userId).maybeSingle();
     if (!me) throw new Error("You're not in this match");
 
@@ -122,7 +122,7 @@ export const finishMatch = createServerFn({ method: "POST" })
     const db = await admin();
     const { data: match } = await db.from("matches").select("*").eq("id", data.id).maybeSingle();
     if (!match || match.status !== "active") return { ok: true };
-    if (new Date(match.ends_at).getTime() > Date.now()) throw new Error("Match still running");
+    if (new Date(match.ends_at ?? 0).getTime() > Date.now()) throw new Error("Match still running");
     const { data: players } = await db.from("match_players").select("*").eq("match_id", match.id);
     if (!players?.some((p) => p.user_id === context.userId)) throw new Error("Not in match");
     const addrs = [...new Set(players.flatMap((p) => Object.keys(p.holdings as Holdings)))];
