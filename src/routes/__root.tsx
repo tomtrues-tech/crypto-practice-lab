@@ -125,9 +125,9 @@ function Header() {
         <Link to="/play" className={link} activeProps={active}>1v1 Arena</Link>
         <div className="ml-auto">
           {user ? (
-            <button className={link} onClick={async () => { await qc.cancelQueries(); qc.clear(); await supabase.auth.signOut(); navigate({ to: "/auth", search: { redirect: undefined }, replace: true }); }}>Sign out</button>
+            <button className={link} onClick={async () => { await qc.cancelQueries(); qc.clear(); await supabase.auth.signOut(); navigate({ to: "/auth", replace: true }); }}>Sign out</button>
           ) : (
-            <Link to="/auth" search={{ redirect: undefined }} className="btn-primary !py-2 text-sm">Sign in</Link>
+            <Link to="/auth" className="btn-primary !py-2 text-sm">Sign in</Link>
           )}
         </div>
       </div>

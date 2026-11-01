@@ -9,7 +9,7 @@ const KEY = "memeduel-solo-v1";
 type Solo = { cash: number; holdings: Holdings };
 
 export const Route = createFileRoute("/solo")({
-  validateSearch: (s: Record<string, unknown>) => ({ token: typeof s["token"] === "string" ? s["token"] : undefined }),
+  validateSearch: (s: Record<string, unknown>): { token?: string } => (typeof s["token"] === "string" ? { token: s["token"] } : {}),
   head: () => ({
     meta: [
       { title: "Solo Practice — MemeDuel" },

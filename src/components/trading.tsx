@@ -12,7 +12,7 @@ function Pct({ v }: { v: number }) {
   return <span className={v >= 0 ? "text-gain" : "text-loss"}>{fmtPct(v)}</span>;
 }
 
-export function TokenTable({ tokens, selected, onSelect, holdings }: { tokens: Token[]; selected?: string; onSelect: (t: Token) => void; holdings?: Holdings }) {
+export function TokenTable({ tokens, selected, onSelect, holdings }: { tokens: Token[]; selected?: string | undefined; onSelect: (t: Token) => void; holdings?: Holdings | undefined }) {
   return (
     <div className="panel overflow-hidden">
       <div className="max-h-[520px] overflow-auto">
@@ -77,7 +77,7 @@ export function DexChart({ token }: { token: Token }) {
   );
 }
 
-export function TradePanel({ token, cash, held, onTrade, disabled }: { token?: Token; cash: number; held: number; onTrade: (side: "BUY" | "SELL", usd: number) => Promise<string>; disabled?: string }) {
+export function TradePanel({ token, cash, held, onTrade, disabled }: { token?: Token | undefined; cash: number; held: number; onTrade: (side: "BUY" | "SELL", usd: number) => Promise<string>; disabled?: string | undefined }) {
   const [side, setSide] = useState<"BUY" | "SELL">("BUY");
   const [amt, setAmt] = useState("");
   const [msg, setMsg] = useState("");
