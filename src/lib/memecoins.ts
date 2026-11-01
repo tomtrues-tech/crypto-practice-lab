@@ -78,7 +78,7 @@ export async function fetchMemecoins(): Promise<Token[]> {
   return tokens
     .map((t) => ({ ...t, trending: tset.has(t.address) }))
     .filter((t) => CORE_TOKENS.includes(t.address) || t.liquidity > 15000)
-    .sort((a, b) => b.volume24h - a.volume24h);
+    .sort((a, b) => Number(b.trending === false) - Number(a.trending === false) || b.volume24h - a.volume24h);
 }
 
 export const fmtUsd = (n: number) => {
