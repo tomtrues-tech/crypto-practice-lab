@@ -1,6 +1,7 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useServerFn } from "@tanstack/react-start";
+import { Trophy } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { finishMatch, joinMatch, leaveMatch, placeTrade } from "@/lib/match.functions";
@@ -39,6 +40,7 @@ function MatchPage() {
   const leave = useServerFn(leaveMatch);
   const [sel, setSel] = useState<string>();
   const [err, setErr] = useState("");
+  const [notice, setNotice] = useState("");
   const finishing = useRef(false);
 
   const me = useQuery({ queryKey: ["me"], queryFn: async () => (await supabase.auth.getUser()).data.user!.id });
@@ -107,8 +109,8 @@ function MatchPage() {
         <div className="panel mx-auto mt-8 max-w-sm p-6">
           <div className="text-xs uppercase tracking-widest text-muted-foreground">Match code</div>
           <div className="mt-2 font-mono text-5xl tracking-[0.25em] text-primary">{match.code}</div>
-          <button className="btn-ghost mt-5 w-full text-sm" onClick={() => { navigator.clipboard.writeText(link); setErr("Invite link copied!"); }}>Copy invite link</button>
-          {err && <p className="mt-2 text-xs text-muted-foreground">{err}</p>}
+          <button className="btn-ghost mt-5 w-full text-sm" onClick={async () => { try { await navigator.clipboard.writeText(link); setNotice("Invite link copied!"); } catch { setNotice("Couldn't copy. Share the code instead."); } }}>Copy invite link</button>
+          {notice && <p role="status" className="mt-2 text-xs text-muted-foreground">{notice}</p>}
         </div>
         <p className="mt-6 text-sm text-muted-foreground">The match starts the moment someone joins.</p>
         {match.host_id === me.data && <button className="mt-4 text-sm text-loss hover:underline" onClick={async () => { await leave({ data: { id } }); nav({ to: "/play" }); }}>Cancel match</button>}
@@ -135,7 +137,7 @@ function MatchPage() {
     <main className="mx-auto max-w-7xl px-4 py-8">
       {match.status === "finished" && (
         <div className="panel mb-6 p-6 text-center">
-          <div className="font-display text-4xl">{match.winner_id === me.data ? "🏆 You won!" : match.winner_id ? "You lost this one" : "It's a tie"}</div>
+          <div className="font-display text-4xl">{match.winner_id === me.data ? <span className="inline-flex items-center gap-3"><Trophy className="h-9 w-9 text-primary" aria-hidden />You won!</span> : match.winner_id ? "You lost this one" : "It's a tie"}</div>
           <p className="mt-1 text-muted-foreground">Final scores are locked in below.</p>
           <Link to="/play" className="btn-primary mt-4 inline-block">Play again</Link>
         </div>

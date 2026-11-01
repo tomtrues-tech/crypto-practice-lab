@@ -29,7 +29,10 @@ function SoloPage() {
   const [st, setSt] = useState<Solo>({ cash: START, holdings: {} });
   const [sel, setSel] = useState<string | undefined>(initial);
 
-  useEffect(() => { const s = localStorage.getItem(KEY); if (s) setSt(JSON.parse(s)); }, []);
+  useEffect(() => {
+    try { const s = localStorage.getItem(KEY); if (s) setSt(JSON.parse(s)); }
+    catch { localStorage.removeItem(KEY); }
+  }, []);
   const save = (n: Solo) => { setSt(n); localStorage.setItem(KEY, JSON.stringify(n)); };
 
   const prices = useHeldPrices(Object.keys(st.holdings), tokens);

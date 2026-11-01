@@ -1,6 +1,14 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useMemecoins } from "@/hooks/use-memecoins";
 import { TokenTable } from "@/components/trading";
+import { FlaskConical, Globe, Lock, Swords, type LucideIcon } from "lucide-react";
+
+const FEATURES: [LucideIcon, string, string][] = [
+  [Swords, "1v1 duels", "Timed matches you set"],
+  [Lock, "Private codes", "Invite only your friends"],
+  [Globe, "Public lobbies", "Anyone can jump in"],
+  [FlaskConical, "Solo mode", "Practice with no pressure"],
+];
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -32,8 +40,8 @@ function Home() {
           </div>
         </div>
         <div className="grid grid-cols-2 gap-3">
-          {[["⚔️", "1v1 duels", "Timed matches you set"], ["🔒", "Private codes", "Invite only your friends"], ["🌐", "Public lobbies", "Anyone can jump in"], ["🧪", "Solo mode", "Practice with no pressure"]].map(([i, t, d]) => (
-            <div key={t} className="panel p-4"><div className="text-2xl">{i}</div><div className="mt-2 font-semibold">{t}</div><div className="text-sm text-muted-foreground">{d}</div></div>
+          {FEATURES.map(([Icon, t, d]) => (
+            <div key={t} className="panel p-4"><Icon className="h-6 w-6 text-primary" aria-hidden /><div className="mt-2 font-semibold">{t}</div><div className="text-sm text-muted-foreground">{d}</div></div>
           ))}
         </div>
       </section>

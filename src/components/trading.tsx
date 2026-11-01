@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useId, useState } from "react";
 import { fmtCompact, fmtPct, fmtUsd, type Token } from "@/lib/memecoins";
 
 export type Holding = { qty: number; cost: number; symbol: string };
@@ -80,18 +80,21 @@ export function DexChart({ token }: { token: Token }) {
 export function TradePanel({ token, cash, held, onTrade, disabled }: { token?: Token | undefined; cash: number; held: number; onTrade: (side: "BUY" | "SELL", usd: number) => Promise<string>; disabled?: string | undefined }) {
   const [side, setSide] = useState<"BUY" | "SELL">("BUY");
   const [amt, setAmt] = useState("");
-  const [msg, setMsg] = useState("");
+  const [feedback, setFeedback] = useState<{ text: string; ok: boolean } | null>(null);
   const [busy, setBusy] = useState(false);
+  const amountId = useId();
   const heldUsd = held * (token?.price ?? 0);
+
+  const fail = (text: string) => setFeedback({ text, ok: false });
 
   const go = async () => {
     const v = parseFloat(amt);
-    if (!token || !(v > 0)) return setMsg("Enter a dollar amount.");
-    if (side === "BUY" && v > cash + 1e-6) return setMsg("Not enough cash.");
-    if (side === "SELL" && v > heldUsd * 1.0001) return setMsg(`You only hold ${fmtUsd(heldUsd)} of ${token.symbol}.`);
+    if (!token || !(v > 0)) return fail("Enter a dollar amount.");
+    if (side === "BUY" && v > cash + 1e-6) return fail("Not enough cash.");
+    if (side === "SELL" && v > heldUsd * 1.0001) return fail(`You only hold ${fmtUsd(heldUsd)} of ${token.symbol}.`);
     setBusy(true);
-    try { setMsg(await onTrade(side, Math.min(v, side === "SELL" ? heldUsd : v))); setAmt(""); }
-    catch (e) { setMsg(e instanceof Error ? e.message : "Trade failed"); }
+    try { setFeedback({ text: await onTrade(side, Math.min(v, side === "SELL" ? heldUsd : v)), ok: true }); setAmt(""); }
+    catch (e) { fail(e instanceof Error ? e.message : "Trade failed"); }
     finally { setBusy(false); }
   };
 
@@ -106,8 +109,8 @@ export function TradePanel({ token, cash, held, onTrade, disabled }: { token?: T
           <button key={s} onClick={() => setSide(s)} className={`rounded py-2 text-sm font-bold ${side === s ? (s === "BUY" ? "bg-gain text-primary-foreground" : "bg-loss text-primary-foreground") : "text-muted-foreground"}`}>{s}</button>
         ))}
       </div>
-      <label className="text-xs text-muted-foreground">Amount (USD)</label>
-      <input value={amt} onChange={(e) => setAmt(e.target.value)} type="number" min="0" placeholder="0.00" className="mt-1 w-full rounded-md border bg-input px-3 py-2 font-mono outline-none focus:border-primary" />
+      <label htmlFor={amountId} className="text-xs text-muted-foreground">Amount (USD)</label>
+      <input id={amountId} value={amt} onChange={(e) => { setAmt(e.target.value); setFeedback(null); }} type="number" min="0" inputMode="decimal" placeholder="0.00" className="mt-1 w-full rounded-md border bg-input px-3 py-2 font-mono outline-none focus:border-primary" />
       <div className="mt-2 flex gap-2">
         {[0.1, 0.25, 0.5, 1].map((f) => (
           <button key={f} onClick={() => setAmt(((side === "BUY" ? cash : heldUsd) * f).toFixed(2))} className="flex-1 rounded border py-1 text-xs hover:bg-muted">{f === 1 ? "Max" : `${f * 100}%`}</button>
@@ -117,7 +120,7 @@ export function TradePanel({ token, cash, held, onTrade, disabled }: { token?: T
       <button disabled={!!disabled || busy || !token} onClick={go} className="btn-primary mt-4 w-full">
         {disabled ?? (busy ? "Placing…" : `${side === "BUY" ? "Buy" : "Sell"} ${token?.symbol ?? ""}`)}
       </button>
-      {msg && <p className="mt-3 text-sm text-muted-foreground">{msg}</p>}
+      {feedback && <p role="status" className={`mt-3 text-sm ${feedback.ok ? "text-gain" : "text-loss"}`}>{feedback.text}</p>}
     </div>
   );
 }
@@ -141,7 +144,7 @@ export function Positions({ holdings, prices, onClose, onSelect, disabled }: { h
                 const v = h.qty * now; const pl = v - h.cost;
                 return (
                   <tr key={a} className="border-t font-mono">
-                    <td className="py-3 font-sans font-semibold"><button onClick={() => onSelect?.(a)}>{h.symbol}</button></td>
+                    <td className="py-3 font-sans font-semibold"><button onClick={() => onSelect?.(a)} className="hover:text-primary">{h.symbol}</button></td>
                     <td>{fmtUsd(entry)}</td>
                     <td>{fmtUsd(now)}</td>
                     <td>{fmtUsd(v)}</td>
