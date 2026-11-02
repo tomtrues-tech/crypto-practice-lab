@@ -12,6 +12,8 @@ import {
 import { useEffect, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSession } from "@/hooks/use-session";
+import { Button } from "@/components/ui/button";
+import { BarChart3, Swords, Wallet, Activity, ArrowUpRight, Crosshair, LogOut } from "lucide-react";
 
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
@@ -81,13 +83,13 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "MemeDuel" },
+      { title: "DexDuel" },
       { name: "description", content: "Paper trade real memecoins and duel other traders." },
     ],
     links: [
       { rel: "stylesheet", href: appCss },
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
-      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Space+Grotesk:wght@400;600;700&family=Bricolage+Grotesque:opsz,wght@12..96,800&display=swap" },
+      { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" },
       { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
     ],
   }),
@@ -115,19 +117,25 @@ function Header() {
   const { user } = useSession();
   const navigate = useNavigate();
   const qc = Route.useRouteContext().queryClient;
-  const link = "rounded-md px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-foreground";
-  const active = { className: "rounded-md px-3 py-2 text-sm font-semibold text-foreground bg-muted" };
+  const link = "flex items-center gap-2 rounded px-3 py-2.5 text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted";
+  const active = { className: "text-primary bg-muted" };
   return (
-    <header className="sticky top-0 z-20 border-b bg-background/80 backdrop-blur">
-      <div className="mx-auto flex max-w-7xl items-center gap-2 px-4 py-3">
-        <Link to="/" className="mr-4 font-display text-2xl">Meme<span className="text-primary">Duel</span></Link>
-        <Link to="/solo" className={link} activeProps={active}>Solo</Link>
-        <Link to="/play" className={link} activeProps={active}>1v1 Arena</Link>
-        <div className="ml-auto">
+    <header className="sticky top-0 z-20 border-b bg-background lg:fixed lg:bottom-0 lg:left-0 lg:w-48 lg:border-b-0 lg:border-r">
+      <div className="flex flex-wrap items-center gap-1 px-3 py-3 lg:h-full lg:flex-col lg:items-stretch lg:gap-6 lg:py-6">
+        <Link to="/" className="mr-auto flex items-center gap-2 px-2 font-display text-2xl lg:mr-0"><Crosshair className="size-6 text-primary" aria-hidden />Dex<span className="-ml-2 text-primary">Duel</span></Link>
+        <span className="hidden px-3 font-mono text-[10px] text-muted-foreground lg:block">MEMECOIN PAPER TRADING</span>
+        <nav aria-label="Main navigation" className="order-3 flex w-full gap-1 border-t pt-2 lg:order-none lg:flex-col lg:border-0 lg:pt-0">
+          <Link to="/" activeOptions={{ exact: true }} className={link} activeProps={active}><BarChart3 className="size-4" />Market</Link>
+          <Link to="/solo" className={link} activeProps={active}><Wallet className="size-4" />Solo</Link>
+          <Link to="/play" className={link} activeProps={active}><Swords className="size-4" />1v1 Arena</Link>
+        </nav>
+        <div className="hidden flex-1 lg:block" />
+        <div className="hidden border-t px-3 pt-4 text-xs text-muted-foreground lg:block"><div className="mb-2 flex items-center gap-2"><Activity className="size-3 text-primary" />Solana market</div><div>Real coins. Paper money.</div></div>
+        <div>
           {user ? (
-            <button className={link} onClick={async () => { await qc.cancelQueries(); qc.clear(); await supabase.auth.signOut(); navigate({ to: "/auth", replace: true }); }}>Sign out</button>
+            <Button variant="ghost" className="w-full justify-start" onClick={async () => { await qc.cancelQueries(); qc.clear(); await supabase.auth.signOut(); navigate({ to: "/auth", replace: true }); }}><LogOut />Sign out</Button>
           ) : (
-            <Link to="/auth" className="btn-primary !py-2 text-sm">Sign in</Link>
+            <Button asChild variant="outline" className="w-full justify-between"><Link to="/auth">Sign in<ArrowUpRight /></Link></Button>
           )}
         </div>
       </div>
@@ -153,7 +161,7 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <Header />
-      <Outlet />
+      <div className="min-w-0 lg:ml-48"><Outlet /></div>
     </QueryClientProvider>
   );
 }
