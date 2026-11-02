@@ -1,5 +1,8 @@
 import { useId, useState } from "react";
-import { fmtCompact, fmtPct, fmtUsd, type Token } from "@/lib/memecoins";
+import { COIN_CATEGORIES, filterCoins, fmtAge, fmtCompact, fmtPct, fmtUsd, type CoinCategory, type Token } from "@/lib/memecoins";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Input } from "@/components/ui/input";
+import { AlertTriangle, Search } from "lucide-react";
 
 export type Holding = { qty: number; cost: number; symbol: string };
 export type Holdings = Record<string, Holding>;
@@ -13,15 +16,33 @@ function Pct({ v }: { v: number }) {
 }
 
 export function TokenTable({ tokens, selected, onSelect, holdings }: { tokens: Token[]; selected?: string | undefined; onSelect: (t: Token) => void; holdings?: Holdings | undefined }) {
+  const [category, setCategory] = useState<CoinCategory>("New & Risky");
+  const [query, setQuery] = useState("");
+  const now = Date.now();
+  const visible = filterCoins(tokens, category, query, now);
   return (
-    <div className="panel overflow-hidden">
+    <Tabs value={category} onValueChange={(value) => { if (COIN_CATEGORIES.some((c) => c === value)) setCategory(value as CoinCategory); }}>
+      <div className="mb-3 flex flex-wrap items-center gap-3">
+        <div className="max-w-full overflow-x-auto">
+          <TabsList className="h-10">
+            {COIN_CATEGORIES.map((c) => <TabsTrigger key={c} value={c} className="gap-2 text-xs sm:text-sm">{c}<span className="font-mono text-xs text-muted-foreground">{filterCoins(tokens, c, "", now).length}</span></TabsTrigger>)}
+          </TabsList>
+        </div>
+        <div className="relative min-w-0 flex-1 basis-44">
+          <Search aria-hidden className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+          <Input aria-label="Search coins" placeholder="Name, symbol or address" value={query} onChange={(e) => setQuery(e.target.value)} className="pl-9" />
+        </div>
+      </div>
+      <p className="mb-3 flex items-start gap-2 text-xs text-muted-foreground"><AlertTriangle aria-hidden className="h-4 w-4 shrink-0 text-loss" /><span>New pairs can crash to zero. Low liquidity and boosted listings are not safety checks. Paper money only.</span></p>
+      <TabsContent value={category}>
+      <div className="panel overflow-hidden">
       <div className="max-h-[520px] overflow-auto">
-        <table className="w-full text-sm">
+        <table className="w-full min-w-[660px] text-sm">
           <thead className="sticky top-0 bg-card text-left text-[11px] uppercase tracking-wider text-muted-foreground">
-            <tr><th className="p-3">Token</th><th>Price</th><th>5m</th><th>1h</th><th>24h</th><th className="hidden md:table-cell">Vol</th><th className="hidden md:table-cell pr-3">MCap</th></tr>
+            <tr><th className="p-3">Token</th><th className="pr-3">Pair age</th><th className="pr-3">Liquidity</th><th>Price</th><th>5m</th><th>1h</th><th>24h</th><th className="hidden md:table-cell">Vol</th><th className="hidden md:table-cell pr-3">MCap</th></tr>
           </thead>
           <tbody>
-            {tokens.map((t) => (
+            {visible.map((t) => (
               <tr key={t.address} onClick={() => onSelect(t)} className={`cursor-pointer border-t font-mono transition-colors hover:bg-muted ${selected === t.address ? "bg-muted" : ""}`}>
                 <td className="p-3 font-sans">
                   <div className="flex items-center gap-2">
@@ -37,6 +58,8 @@ export function TokenTable({ tokens, selected, onSelect, holdings }: { tokens: T
                     </div>
                   </div>
                 </td>
+                <td className="pr-3 text-muted-foreground">{fmtAge(t.pairCreatedAt, now)}</td>
+                <td className={`pr-3 ${t.liquidity < 15000 ? "text-loss" : "text-muted-foreground"}`}>{fmtCompact(t.liquidity)}</td>
                 <td>{fmtUsd(t.price)}</td>
                 <td><Pct v={t.change5m} /></td>
                 <td><Pct v={t.change1h} /></td>
@@ -48,7 +71,11 @@ export function TokenTable({ tokens, selected, onSelect, holdings }: { tokens: T
           </tbody>
         </table>
       </div>
+      {visible.length === 0 && <p className="p-6 text-center text-sm text-muted-foreground">{query ? "No matching coins in this category." : category === "New & Risky" ? "No pairs under 24 hours old in the current feed. Check All for more coins." : "No coins in this category right now."}</p>}
     </div>
+    <p className="mt-2 text-xs text-muted-foreground">{visible.length} coins · DexScreener latest profiles & boosts · Pair age is not token launch age</p>
+    </TabsContent>
+    </Tabs>
   );
 }
 
