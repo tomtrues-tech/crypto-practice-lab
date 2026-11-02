@@ -46,7 +46,7 @@ function Home() {
         </div>
       </section>
       <div className="mb-3 flex items-end justify-between">
-        <h2 className="font-display text-2xl">Trending memecoins</h2>
+        <h2 className="font-display text-2xl">Memecoin market</h2>
         <span className="text-xs text-muted-foreground">Data from DexScreener · refreshes every 15s</span>
       </div>
       {isLoading ? <div className="panel p-8 text-center text-muted-foreground">Loading coins…</div>

@@ -25,6 +25,7 @@ export type Token = {
   icon?: string;
   pumpfun: boolean;
   trending: boolean;
+  pairCreatedAt?: number;
 };
 
 const API = "https://api.dexscreener.com";
@@ -33,7 +34,7 @@ function mapPairs(pairs: any[], trending: Set<string>): Token[] {
   const best = new Map<string, any>();
   for (const p of pairs) {
     const a = p.baseToken?.address;
-    if (!a || !p.priceUsd) continue;
+    if (!a || p.chainId !== "solana" || !(Number(p.priceUsd) > 0) || !Number.isFinite(Number(p.priceUsd))) continue;
     const cur = best.get(a);
     if (!cur || (p.liquidity?.usd ?? 0) > (cur.liquidity?.usd ?? 0)) best.set(a, p);
   }
@@ -52,13 +53,14 @@ function mapPairs(pairs: any[], trending: Set<string>): Token[] {
     icon: p.info?.imageUrl,
     pumpfun: p.baseToken.address.endsWith("pump") || p.dexId === "pumpswap" || p.dexId === "pumpfun",
     trending: trending.has(p.baseToken.address),
+    pairCreatedAt: typeof p.pairCreatedAt === "number" ? p.pairCreatedAt : undefined,
   }));
 }
 
 export async function fetchPrices(addresses: string[]): Promise<Token[]> {
   const out: any[] = [];
   for (let i = 0; i < addresses.length; i += 30) {
-    const r = await fetch(`${API}/tokens/v1/solana/${addresses.slice(i, i + 30).join(",")}`);
+    const r = await fetch(`${API}/tokens/v1/solana/${addresses.slice(i, i + 30).join(",")}`, { signal: AbortSignal.timeout(12000) });
     if (!r.ok) throw new Error("Price feed unavailable");
     out.push(...(await r.json()));
   }
@@ -66,19 +68,42 @@ export async function fetchPrices(addresses: string[]): Promise<Token[]> {
 }
 
 export async function fetchMemecoins(): Promise<Token[]> {
-  let trending: string[] = [];
-  try {
-    const r = await fetch(`${API}/token-boosts/top/v1`);
-    const j = await r.json();
-    trending = (j as any[]).filter((t) => t.chainId === "solana").map((t) => t.tokenAddress).slice(0, 22);
-  } catch {}
-  const all = [...new Set([...CORE_TOKENS, ...trending])];
-  const tokens = await fetchPrices(all);
-  const tset = new Set(trending.filter((t) => !CORE_TOKENS.includes(t)));
-  return tokens
-    .map((t) => ({ ...t, trending: tset.has(t.address) }))
-    .filter((t) => CORE_TOKENS.includes(t.address) || t.liquidity > 15000)
-    .sort((a, b) => Number(b.trending === false) - Number(a.trending === false) || b.volume24h - a.volume24h);
+  const feeds = await Promise.all([
+    "/token-profiles/latest/v1", "/token-boosts/latest/v1", "/token-boosts/top/v1",
+  ].map(async (path) => {
+    try {
+      const r = await fetch(`${API}${path}`, { signal: AbortSignal.timeout(10000) });
+      if (!r.ok) return [];
+      const rows = await r.json();
+      return Array.isArray(rows) ? rows.filter((t) => t.chainId === "solana" && typeof t.tokenAddress === "string").map((t) => t.tokenAddress as string) : [];
+    } catch { return []; }
+  }));
+  const all = [...new Set([...CORE_TOKENS, ...feeds.flat()])];
+  // Keep each batch independent: one unavailable feed must not hide the other coins.
+  const results = await Promise.allSettled(Array.from({ length: Math.ceil(all.length / 30) }, (_, i) => fetchPrices(all.slice(i * 30, i * 30 + 30))));
+  const tokens = results.flatMap((r) => r.status === "fulfilled" ? r.value : []);
+  if (!tokens.length) throw new Error("Price feed unavailable");
+  const boosted = new Set([...feeds[1] ?? [], ...feeds[2] ?? []]);
+  return tokens.map((t) => ({ ...t, trending: boosted.has(t.address) }))
+    .sort((a, b) => b.volume24h - a.volume24h);
+}
+
+export const COIN_CATEGORIES = ["New & Risky", "Trending", "Established", "All"] as const;
+export type CoinCategory = typeof COIN_CATEGORIES[number];
+export function filterCoins(tokens: Token[], category: CoinCategory, query = "", now = Date.now()) {
+  const search = query.trim().toLowerCase();
+  return tokens.filter((t) => {
+    const age = t.pairCreatedAt === undefined ? Infinity : now - t.pairCreatedAt;
+    const matches = category === "All" || (category === "New & Risky" && age >= 0 && age <= 24 * 60 * 60 * 1000 && !CORE_TOKENS.includes(t.address))
+      || (category === "Trending" && t.trending) || (category === "Established" && CORE_TOKENS.includes(t.address));
+    return matches && (!search || [t.name, t.symbol, t.address].some((v) => v.toLowerCase().includes(search)));
+  }).sort((a, b) => category === "New & Risky" ? (b.pairCreatedAt ?? 0) - (a.pairCreatedAt ?? 0) : b.volume24h - a.volume24h);
+}
+
+export function fmtAge(createdAt?: number, now = Date.now()) {
+  if (!createdAt || createdAt > now) return "—";
+  const minutes = Math.floor((now - createdAt) / 60000);
+  return minutes < 1 ? "<1m" : minutes < 60 ? `${minutes}m` : minutes < 1440 ? `${Math.floor(minutes / 60)}h` : `${Math.floor(minutes / 1440)}d`;
 }
 
 export const fmtUsd = (n: number) => {
