@@ -8,9 +8,9 @@ import { createMatch, joinMatch } from "@/lib/match.functions";
 export const Route = createFileRoute("/_authenticated/play")({
   head: () => ({
     meta: [
-      { title: "1v1 Arena — MemeDuel" },
+      { title: "1v1 Arena — DexDuel" },
       { name: "description", content: "Host or join a timed memecoin trading duel." },
-      { property: "og:title", content: "1v1 Arena — MemeDuel" },
+      { property: "og:title", content: "1v1 Arena — DexDuel" },
       { property: "og:description", content: "Host or join a timed memecoin trading duel." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

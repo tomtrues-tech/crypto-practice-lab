@@ -12,9 +12,9 @@ import { fmtPct, fmtUsd } from "@/lib/memecoins";
 export const Route = createFileRoute("/_authenticated/match/$id")({
   head: () => ({
     meta: [
-      { title: "Match — MemeDuel" },
+      { title: "Match — DexDuel" },
       { name: "description", content: "A live 1v1 memecoin trading duel." },
-      { property: "og:title", content: "You've been challenged on MemeDuel" },
+      { property: "og:title", content: "You've been challenged on DexDuel" },
       { property: "og:description", content: "Join this 1v1 memecoin trading duel." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },

@@ -70,6 +70,7 @@ export async function fetchPrices(addresses: string[]): Promise<Token[]> {
 export async function fetchMemecoins(): Promise<Token[]> {
   const feeds = await Promise.all([
     "/token-profiles/latest/v1", "/token-boosts/latest/v1", "/token-boosts/top/v1",
+    "/token-profiles/recent-updates/v1", "/community-takeovers/latest/v1",
   ].map(async (path) => {
     try {
       const r = await fetch(`${API}${path}`, { signal: AbortSignal.timeout(10000) });

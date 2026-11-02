@@ -29,6 +29,26 @@ describe("Real memecoin discovery", () => {
     expect(filterCoins([token()], "All", "freshpump", NOW)).toHaveLength(1);
     expect(filterCoins([token()], "All", "missing", NOW)).toHaveLength(0);
   });
+  it("includes recently updated profiles without a liquidity floor", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      if (url.includes("recent-updates")) return Response.json([{ chainId: "solana", tokenAddress: "updatedpump" }]);
+      if (!url.includes("/tokens/v1/")) return Response.json([]);
+      return Response.json([{ chainId: "solana", baseToken: { address: "updatedpump", symbol: "NEW", name: "New" }, pairAddress: "updatedpair", priceUsd: "0.001", liquidity: { usd: 1 }, pairCreatedAt: NOW - 60000 }]);
+    }));
+    const coins = await fetchMemecoins();
+    expect(filterCoins(coins, "New & Risky", "", NOW).map((t) => t.address)).toEqual(["updatedpump"]);
+    expect(coins[0]?.liquidity).toBe(1);
+  });
+  it("includes takeover discoveries but does not treat an old pair as new", async () => {
+    vi.stubGlobal("fetch", vi.fn(async (url: string) => {
+      if (url.includes("community-takeovers")) return Response.json([{ chainId: "solana", tokenAddress: "takeoverpump" }]);
+      if (!url.includes("/tokens/v1/")) return Response.json([]);
+      return Response.json([{ chainId: "solana", baseToken: { address: "takeoverpump", symbol: "OLD", name: "Old" }, pairAddress: "oldpair", priceUsd: "0.001", pairCreatedAt: NOW - 86400001 }]);
+    }));
+    const coins = await fetchMemecoins();
+    expect(coins.map((t) => t.address)).toContain("takeoverpump");
+    expect(filterCoins(coins, "New & Risky", "", NOW)).toEqual([]);
+  });
   it("combines latest profiles and boosts without a liquidity floor", async () => {
     vi.stubGlobal("fetch", vi.fn(async (url: string) => {
       if (url.includes("token-profiles")) return Response.json([{ chainId: "solana", tokenAddress: "profilepump" }]);
