@@ -12,9 +12,9 @@ export const Route = createFileRoute("/auth")({
   validateSearch: (s: Record<string, unknown>): { redirect?: string } => (typeof s["redirect"] === "string" ? { redirect: s["redirect"] } : {}),
   head: () => ({
     meta: [
-      { title: "Sign in — MemeDuel" },
+      { title: "Sign in — DexDuel" },
       { name: "description", content: "Sign in to battle other traders in memecoin paper-trading duels." },
-      { property: "og:title", content: "Sign in — MemeDuel" },
+      { property: "og:title", content: "Sign in — DexDuel" },
       { property: "og:description", content: "Sign in to battle other traders in memecoin duels." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
