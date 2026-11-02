@@ -1,4 +1,4 @@
-# Memecoin expansion
-- [x] Expand real Solana coin discovery with fresh launch feeds.
-- [x] Add shared category tabs, search, pair age and liquidity.
-- [x] Test classification and verify discovery and solo trading.
+# DexDuel refresh
+- [ ] Rename the app and refresh the shared trading interface using the supplied references.
+- [ ] Expand real fresh-coin discovery without a liquidity floor and test feed behavior.
+- [ ] Verify market browsing, solo trading, and narrow-screen layout.
