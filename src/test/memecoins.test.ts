@@ -14,10 +14,14 @@ describe("Real memecoin discovery", () => {
     expect(filterCoins([token()], "New & Risky", "", NOW).map((t) => t.address)).toEqual(["freshpump"]);
   });
   it("keeps pairs older than 24 hours or with unknown dates out of New & Risky", () => {
-    expect(filterCoins([token({ pairCreatedAt: NOW - 86400001 }), token({ pairCreatedAt: undefined })], "New & Risky", "", NOW)).toEqual([]);
+    const unknown = token();
+    delete unknown.pairCreatedAt;
+    expect(filterCoins([token({ pairCreatedAt: NOW - 86400001 }), unknown], "New & Risky", "", NOW)).toEqual([]);
   });
   it("separates boosted and established coins", () => {
-    const rows = [token(), token({ address: CORE_TOKENS[0], trending: true })];
+    const established = CORE_TOKENS[0];
+    if (!established) throw new Error("Established coin list is empty");
+    const rows = [token(), token({ address: established, trending: true })];
     expect(filterCoins(rows, "Established", "", NOW).map((t) => t.address)).toEqual([CORE_TOKENS[0]]);
     expect(filterCoins(rows, "Trending", "", NOW).map((t) => t.address)).toEqual([CORE_TOKENS[0]]);
   });
