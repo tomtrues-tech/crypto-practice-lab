@@ -38,7 +38,7 @@ export function TokenTable({ tokens, selected, onSelect, holdings }: { tokens: T
       <TabsContent value={category}>
       <div className="overflow-hidden border-y">
       <div className="max-h-[720px] overflow-auto">
-        <table className="w-full min-w-[660px] text-sm">
+        <table className="market-table w-full min-w-[900px] text-sm">
           <thead className="sticky top-0 bg-card text-left text-[11px] uppercase tracking-wider text-muted-foreground">
             <tr><th className="p-3">Token</th><th className="pr-3">Pair age</th><th className="pr-3">Liquidity</th><th>Price</th><th>5m</th><th>1h</th><th>24h</th><th className="hidden md:table-cell">Vol</th><th className="hidden md:table-cell pr-3">MCap</th></tr>
           </thead>
@@ -101,6 +101,7 @@ export function DexChart({ token }: { token: Token }) {
         src={`https://dexscreener.com/solana/${token.pair}?embed=1&loadChartSettings=0&trades=0&tabs=0&info=0&chartLeftToolbar=0&chartTheme=dark&theme=dark&chartStyle=1&chartType=usd&interval=1`}
         className="h-[420px] w-full border-0"
       />
+      <div className="flex justify-end border-t px-3 py-2"><Button asChild variant="link" size="sm"><a href={`https://dexscreener.com/solana/${token.pair}`} target="_blank" rel="noopener noreferrer">Open chart on DexScreener ↗</a></Button></div>
     </div>
   );
 }
