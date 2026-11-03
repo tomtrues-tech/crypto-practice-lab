@@ -95,3 +95,9 @@
   & [role="tab"] { border-radius: 0; border-bottom: 2px solid transparent; height: 44px; background: transparent; box-shadow: none; }
   & [role="tab"][data-state="active"] { border-bottom-color: var(--primary); color: var(--foreground); }
 }
+
+@utility market-table {
+  table-layout: auto;
+  & th, & td { padding-right: 16px; white-space: nowrap; }
+  & th:first-child, & td:first-child { min-width: 190px; }
+}
