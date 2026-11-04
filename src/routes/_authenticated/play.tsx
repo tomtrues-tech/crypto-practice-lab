@@ -6,6 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { createMatch, joinMatch } from "@/lib/match.functions";
 
 export const Route = createFileRoute("/_authenticated/play")({
+  validateSearch: (s: Record<string, unknown>): { code?: string } => typeof s["code"] === "string" && /^[A-Z0-9]{6}$/i.test(s["code"]) ? { code: s["code"].toUpperCase() } : {},
   head: () => ({
     meta: [
       { title: "1v1 Arena — DexDuel" },
@@ -22,13 +23,14 @@ export const Route = createFileRoute("/_authenticated/play")({
 const LENGTHS = [5, 15, 30, 60];
 
 function Play() {
+  const invite = Route.useSearch();
   const nav = useNavigate();
   const create = useServerFn(createMatch);
   const join = useServerFn(joinMatch);
   const [isPublic, setIsPublic] = useState(true);
   const [minutes, setMinutes] = useState(15);
   const [custom, setCustom] = useState("");
-  const [code, setCode] = useState("");
+  const [code, setCode] = useState(invite.code ?? "");
   const [err, setErr] = useState("");
   const [busy, setBusy] = useState(false);
 
@@ -45,7 +47,9 @@ function Play() {
     queryKey: ["my-matches"],
     queryFn: async () => {
       const { data: u } = await supabase.auth.getUser();
-      const { data } = await supabase.from("match_players").select("match_id, matches(id, code, status, ends_at)").eq("user_id", u.user!.id).order("joined_at", { ascending: false }).limit(10);
+      if (!u.user) throw new Error("Please sign in again");
+      const { data, error } = await supabase.from("match_players").select("match_id, matches(id, code, status, ends_at)").eq("user_id", u.user.id).order("joined_at", { ascending: false }).limit(10);
+      if (error) throw error;
       return (data ?? []).map((r: any) => r.matches).filter((m: any) => m && m.status !== "finished");
     },
   });

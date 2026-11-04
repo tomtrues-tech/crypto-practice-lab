@@ -42,16 +42,23 @@ function MatchPage() {
   const [err, setErr] = useState("");
   const [notice, setNotice] = useState("");
   const finishing = useRef(false);
+  const lastFinishAttempt = useRef(0);
 
-  const me = useQuery({ queryKey: ["me"], queryFn: async () => (await supabase.auth.getUser()).data.user!.id });
+  const me = useQuery({ queryKey: ["me"], queryFn: async () => {
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) throw new Error("Please sign in again");
+    return data.user.id;
+  } });
   const q = useQuery({
     queryKey: ["match", id],
     queryFn: async () => {
-      const [{ data: match }, { data: players }] = await Promise.all([
+      const [matchResult, playersResult] = await Promise.all([
         supabase.from("matches").select("*").eq("id", id).maybeSingle(),
         supabase.from("match_players").select("*").eq("match_id", id).order("joined_at"),
       ]);
-      return { match, players: players ?? [] };
+      if (matchResult.error) throw matchResult.error;
+      if (playersResult.error) throw playersResult.error;
+      return { match: matchResult.data, players: playersResult.data ?? [] };
     },
     refetchInterval: 10000,
   });
@@ -76,16 +83,20 @@ function MatchPage() {
   const live = match?.status === "active" && left > 0;
 
   useEffect(() => {
-    if (match?.status === "active" && endsAt && now >= endsAt && mine && !finishing.current) {
+    if (match?.status === "active" && endsAt && now >= endsAt && mine && !finishing.current && now - lastFinishAttempt.current >= 5000) {
+      lastFinishAttempt.current = now;
       finishing.current = true;
-      finish({ data: { id } }).finally(() => { finishing.current = false; qc.invalidateQueries({ queryKey: ["match", id] }); });
+      finish({ data: { id } }).then(() => setErr("")).catch((e: unknown) => {
+        setErr(e instanceof Error ? e.message : "Final scoring unavailable; retrying.");
+      }).finally(() => { finishing.current = false; qc.invalidateQueries({ queryKey: ["match", id] }); });
     }
   }, [now, endsAt, match?.status, mine, id, finish, qc]);
 
   if (q.isLoading || me.isLoading) return <Center>Loading match…</Center>;
+  if (q.isError || me.isError) return <Center>Could not load this match. Please refresh and try again.</Center>;
   if (!match) return <Center>This match doesn't exist or is private. <Link to="/play" className="text-primary underline">Back to arena</Link></Center>;
 
-  const link = typeof window !== "undefined" ? `${window.location.origin}/match/${id}` : "";
+  const link = typeof window !== "undefined" ? `${window.location.origin}/play?code=${match.code}` : "";
 
   // Not a member yet
   if (!mine) {
@@ -128,13 +139,16 @@ function MatchPage() {
   const mm = Math.floor(left / 60000), ss = Math.floor((left % 60000) / 1000);
 
   const doTrade = async (side: "BUY" | "SELL", usd: number) => {
-    const r = await trade({ data: { matchId: id, token: token!.address, side, usd } });
+    if (!token) throw new Error("Pick a token first");
+    const r = await trade({ data: { matchId: id, token: token.address, side, usd } });
     qc.invalidateQueries({ queryKey: ["match", id] });
     return `${side === "BUY" ? "Bought" : "Sold"} ${r.symbol} at ${fmtUsd(r.price)}`;
   };
 
   return (
     <main className="mx-auto max-w-7xl px-4 py-8">
+      {err && <p role="alert" className="mb-4 text-sm text-loss">{err}</p>}
+      {match.status === "active" && !live && <p role="status" className="mb-4 text-sm text-muted-foreground">Settling final scores…</p>}
       {match.status === "finished" && (
         <div className="panel mb-6 p-6 text-center">
           <div className="font-display text-4xl">{match.winner_id === me.data ? <span className="inline-flex items-center gap-3"><Trophy className="h-9 w-9 text-primary" aria-hidden />You won!</span> : match.winner_id ? "You lost this one" : "It's a tie"}</div>

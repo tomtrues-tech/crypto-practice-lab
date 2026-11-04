@@ -156,10 +156,12 @@ export function TradePanel({ token, cash, held, onTrade, disabled }: { token?: T
 
 export function Positions({ holdings, prices, onClose, onSelect, disabled }: { holdings: Holdings; prices: Map<string, Token>; onClose: (address: string) => Promise<void>; onSelect?: (a: string) => void; disabled?: boolean }) {
   const [closing, setClosing] = useState<string | null>(null);
+  const [error, setError] = useState("");
   const rows = Object.entries(holdings);
   return (
     <div className="border-y py-5">
       <h3 className="mb-3 font-display text-lg">Open positions</h3>
+      {error && <p role="alert" className="mb-3 text-sm text-loss">{error}</p>}
       {rows.length === 0 ? <p className="text-sm text-muted-foreground">No open positions yet.</p> : (
         <div className="overflow-x-auto">
           <table className="w-full min-w-[580px] text-sm">
@@ -179,7 +181,7 @@ export function Positions({ holdings, prices, onClose, onSelect, disabled }: { h
                     <td>{fmtUsd(v)}</td>
                     <td className={pl >= 0 ? "text-gain" : "text-loss"}>{pl >= 0 ? "+" : ""}{fmtUsd(pl)} ({fmtPct((pl / h.cost) * 100)})</td>
                     <td className="text-right">
-                      <Button variant="outline" size="sm" disabled={disabled || closing === a} onClick={async () => { setClosing(a); try { await onClose(a); } finally { setClosing(null); } }} className="text-loss">
+                      <Button variant="outline" size="sm" disabled={disabled || closing !== null} onClick={async () => { setClosing(a); setError(""); try { await onClose(a); } catch (e) { setError(e instanceof Error ? e.message : "Could not close position"); } finally { setClosing(null); } }} className="text-loss">
                         {closing === a ? "…" : "Close"}
                       </Button>
                     </td>
