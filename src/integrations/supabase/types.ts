@@ -161,6 +161,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      duel_action: {
+        Args: { p_action: string; p_data: Json; p_user: string }
+        Returns: Json
+      }
       is_match_member: {
         Args: { _match: string; _user: string }
         Returns: boolean
