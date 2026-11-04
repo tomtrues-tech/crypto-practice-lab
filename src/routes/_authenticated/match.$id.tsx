@@ -42,6 +42,7 @@ function MatchPage() {
   const [err, setErr] = useState("");
   const [notice, setNotice] = useState("");
   const finishing = useRef(false);
+  const lastFinishAttempt = useRef(0);
 
   const me = useQuery({ queryKey: ["me"], queryFn: async () => {
     const { data, error } = await supabase.auth.getUser();
@@ -82,7 +83,8 @@ function MatchPage() {
   const live = match?.status === "active" && left > 0;
 
   useEffect(() => {
-    if (match?.status === "active" && endsAt && now >= endsAt && mine && !finishing.current) {
+    if (match?.status === "active" && endsAt && now >= endsAt && mine && !finishing.current && now - lastFinishAttempt.current >= 5000) {
+      lastFinishAttempt.current = now;
       finishing.current = true;
       finish({ data: { id } }).then(() => setErr("")).catch((e: unknown) => {
         setErr(e instanceof Error ? e.message : "Final scoring unavailable; retrying.");
@@ -94,7 +96,7 @@ function MatchPage() {
   if (q.isError || me.isError) return <Center>Could not load this match. Please refresh and try again.</Center>;
   if (!match) return <Center>This match doesn't exist or is private. <Link to="/play" className="text-primary underline">Back to arena</Link></Center>;
 
-  const link = typeof window !== "undefined" ? `${window.location.origin}/match/${id}` : "";
+  const link = typeof window !== "undefined" ? `${window.location.origin}/play?code=${match.code}` : "";
 
   // Not a member yet
   if (!mine) {
