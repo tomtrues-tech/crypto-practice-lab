@@ -10,7 +10,7 @@
 <!-- LOVABLE:END -->
 
 - Memecoin prices come from DexScreener (src/lib/memecoins.ts) — no API key, shared by browser and server.
-- Match trades/scoring run only in server functions (src/lib/match.functions.ts) with server-fetched prices; match tables have no client write policies, so players can't fake trades.
+- Match actions run through authenticated server functions with server-fetched prices and the service-role-only duel_action RPC; it locks the match and commits each action atomically to prevent overlapping joins, trades, cancellations or settlement. Missing final prices leave settlement pending rather than inventing scores.
 - Solo mode stores its portfolio in localStorage; it needs no account.
 - Coin discovery combines latest and recently updated DexScreener profiles, latest/top boosts, and community takeovers without a liquidity floor; shared TokenTable categories use pair creation timestamps, not listing dates, so freshness stays factual.
 - Use a shared terminal navigation shell and semantic trading variants for controls so market, solo, and match views stay visually consistent.
