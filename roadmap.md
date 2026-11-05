@@ -5,5 +5,5 @@
 
 # Full 1v1 verification
 - [x] Exercise two signed-in players creating, joining, trading, and finishing a real match.
-- [ ] Fix failures and add regression tests for match rules.
+- [x] Fix failures and add regression tests for match rules.
 - [x] Verify the winner and locked final scores through both players' screens.
